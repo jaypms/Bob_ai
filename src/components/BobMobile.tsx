@@ -7,16 +7,15 @@ const BobMobile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const callGrocApi = async () => {
+  const callGrocProxyApi = async () => {
     setLoading(true);
     setError("");
     setResponse("");
     try {
-      const res = await fetch("https://api.groc.example.com/endpoint", {
+      const res = await fetch("/api/grocProxy", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.GROC_API_KEY}`, // Remplace par ta clé en dur pour tester côté client
         },
         body: JSON.stringify({ query: input }),
       });
@@ -38,7 +37,7 @@ const BobMobile = () => {
         value={input}
         onChangeText={setInput}
       />
-      <Button title="Envoyer" onPress={callGrocApi} disabled={loading || !input.trim()} />
+      <Button title="Envoyer" onPress={callGrocProxyApi} disabled={loading || !input.trim()} />
       {loading && <ActivityIndicator size="large" color="#ff4081" />}
       {!!response && <Text style={styles.response}>{response}</Text>}
       {!!error && <Text style={styles.error}>Erreur: {error}</Text>}
