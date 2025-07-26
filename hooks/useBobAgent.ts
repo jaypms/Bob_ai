@@ -1,43 +1,46 @@
-import { useState, useEffect } from 'react';
-
-type BobAgentState = {
-  loading: boolean;
-  error: string | null;
-  response: string | null;
-};
+import { useState } from 'react';
 
 export function useBobAgent() {
-  const [state, setState] = useState<BobAgentState>({
-    loading: false,
-    error: null,
-    response: null,
-  });
+  const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function sendPrompt(prompt: string) {
-    setState({ loading: true, error: null, response: null });
+  const sendPrompt = async (prompt: string) => {
+    setLoading(true);
+    setError(null);
+    setResponse(null);
+
     try {
-      // Ici, appeler une API d'IA gratuite comme Hugging Face inference API
-      const res = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer YOUR_HUGGINGFACE_API_TOKEN`,
           'Content-Type': 'application/json',
+          Authorization: `Bearer YOUR_GROQ_API_KEY`, // Remplace par ta clé
         },
         body: JSON.stringify({
-          inputs: prompt,
-          options: { wait_for_model: true },
+          model: 'mixtral-8x7b-32768',
+          messages: [{ role: 'user', content: prompt }],
         }),
       });
-      const data = await res.json();
-      if (data.error) {
-        setState({ loading: false, error: data.error, response: null });
-      } else {
-        setState({ loading: false, error: null, response: data[0]?.generated_text ?? '' });
-      }
-    } catch (err) {
-      setState({ loading: false, error: (err as Error).message, response: null });
-    }
-  }
 
-  return { ...state, sendPrompt };
+      const data = await res.json();
+
+      if (data.choices?.[0]?.message?.content) {
+        setResponse(data.choices[0].message.content.trim());
+      } else {
+        setError('Réponse invalide.');
+      }
+    } catch (err: any) {
+      setError('Erreur : ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    loading,
+    response,
+    error,
+    sendPrompt,
+  };
 }
