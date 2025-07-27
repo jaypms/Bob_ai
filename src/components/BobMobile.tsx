@@ -1,29 +1,37 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, ActivityIndicator, StyleSheet } from "react-native";
 
-const BobMobile = () => {
+export default function BobMobile() {
   const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
+  const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const callGrocProxyApi = async () => {
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
     setLoading(true);
-    setError("");
-    setResponse("");
+    setError(null);
+    setResponse(null);
+
     try {
-      const res = await fetch("/api/grocProxy", {
+      const res = await fetch("http://100.68.8.46:3000/api/grocProxy", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ query: input }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setResponse(JSON.stringify(data, null, 2));
+
+      if (!res.ok) {
+        const errText = await res.text();
+        setError(`Erreur API: ${errText}`);
+      } else {
+        const data = await res.json();
+        setResponse(JSON.stringify(data, null, 2));
+      }
     } catch (err: any) {
-      setError(err.message || "Erreur inconnue");
+      setError(`Erreur réseau: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -36,36 +44,51 @@ const BobMobile = () => {
         placeholder="Pose ta question à Bob"
         value={input}
         onChangeText={setInput}
+        editable={!loading}
       />
-      <Button title="Envoyer" onPress={callGrocProxyApi} disabled={loading || !input.trim()} />
-      {loading && <ActivityIndicator size="large" color="#ff4081" />}
-      {!!response && <Text style={styles.response}>{response}</Text>}
-      {!!error && <Text style={styles.error}>Erreur: {error}</Text>}
+      <Button title="Envoyer" onPress={handleSend} disabled={loading} />
+
+      {loading && <ActivityIndicator size="large" color="#6200ee" style={{ marginTop: 20 }} />}
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {response && (
+        <View style={styles.responseContainer}>
+          <Text style={styles.responseText}>{response}</Text>
+        </View>
+      )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: "center" },
+  container: {
+    padding: 16,
+    flex: 1,
+    justifyContent: "flex-start",
+    backgroundColor: "#121212",
+  },
   input: {
-    borderColor: "#ff4081",
+    height: 50,
+    borderColor: "#6200ee",
     borderWidth: 1,
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
+    paddingHorizontal: 12,
+    color: "#fff",
+    marginBottom: 12,
   },
-  response: {
+  responseContainer: {
     marginTop: 20,
+    backgroundColor: "#1e1e1e",
+    padding: 12,
+    borderRadius: 8,
+  },
+  responseText: {
+    color: "#e0e0e0",
     fontFamily: "monospace",
-    fontSize: 14,
-    color: "#333",
   },
-  error: {
+  errorText: {
     marginTop: 20,
-    color: "red",
-    fontWeight: "bold",
+    color: "#cf6679",
   },
 });
-
-export default BobMobile;
