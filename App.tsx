@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 
 export default function App() {
@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.response}>{text}</Text>
+      <Text style={styles.text}>{text}</Text>
     </View>
   );
 }
@@ -34,8 +34,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  response: {
+  text: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
+    textAlign: 'center',
   },
 });
